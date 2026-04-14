@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LANS — Comparativo de Oficinas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface2:#f0f1f4;--border:#dde0e7;--text:#1a1d27;--muted:#5f6577;--accent:#2563eb;--accent2:#9333ea;--glow:rgba(37,99,235,.08);--glow2:rgba(147,51,234,.08);--green:#16a34a;--yellow:#ca8a04;--orange:#ea580c;--red:#dc2626}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+
+.header{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--surface);z-index:1000;position:relative}
+.header h1{font-size:17px;font-weight:700;letter-spacing:-.5px}
+.header h1 span{color:var(--accent)}
+.header .sub{color:var(--muted);font-size:11px;margin-top:1px}
+.legend{display:flex;gap:8px;flex-wrap:wrap}
+.legend-i{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.legend-d{width:8px;height:8px;border-radius:50%}
+.legend-s{width:10px;height:10px;border-radius:3px}
+
+.main{display:grid;grid-template-columns:1fr 420px;height:calc(100vh - 55px)}
+@media(max-width:900px){.main{grid-template-columns:1fr;grid-template-rows:50vh 1fr}.panel{border-left:none!important;border-top:1px solid var(--border)}}
+
+#map{width:100%;height:100%;z-index:1}
+.leaflet-container{background:#f5f6f8}
+.leaflet-popup-content-wrapper{background:#fff!important;color:var(--text)!important;border-radius:10px!important;border:1px solid var(--border)!important;box-shadow:0 4px 16px rgba(0,0,0,.15)!important;font-family:'DM Sans',sans-serif!important}
+.leaflet-popup-tip{background:#fff!important}
+.leaflet-popup-content{margin:10px 12px!important;font-size:12px!important;line-height:1.5!important}
+.pn{font-weight:700;font-size:13px;margin-bottom:2px}
+.pz{color:var(--muted);font-size:11px;margin-bottom:8px}
+.pm{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;font-size:11px;align-items:center}
+.pm-h{font-weight:600;font-size:10px;color:var(--muted);text-transform:uppercase}
+.pm .v{font-family:'JetBrains Mono',monospace;font-weight:600}
+.diff-pos{color:var(--red);font-weight:700}
+.diff-neg{color:var(--green);font-weight:700}
+
+.panel{border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--bg);z-index:500}
+.mode-switch{display:flex;padding:10px 12px 0;gap:4px;flex-shrink:0}
+.mode-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:.2s;text-align:center}
+.mode-btn.on1{border-color:var(--accent);background:var(--glow);color:var(--accent)}
+.mode-btn.on2{border-color:var(--accent2);background:var(--glow2);color:var(--accent2)}
+.mode-btn.onC{border-color:var(--text);background:var(--surface2);color:var(--text)}
+
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:10px 10px 0;flex-shrink:0}
+.tab{padding:10px 12px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.pc{flex:1;overflow-y:auto;padding:12px}
+.pc::-webkit-scrollbar{width:4px}
+.pc::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px;cursor:pointer;transition:.2s}
+.card:hover,.card.on{border-color:var(--accent);box-shadow:0 2px 8px rgba(37,99,235,.1)}
+.card .n{font-weight:600;font-size:12px}
+.card .z{font-size:10px;color:var(--muted);margin-bottom:6px}
+
+.comp-row{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center}
+.comp-box{padding:5px;border-radius:5px;background:var(--surface2);text-align:center}
+.comp-box.ofi1{background:var(--glow)}
+.comp-box.ofi2{background:var(--glow2)}
+.comp-box .lbl{font-size:8px;color:var(--muted);font-weight:600}
+.comp-box .val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
+.comp-diff{padding:5px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;text-align:center;min-width:42px}
+.comp-diff.neg{background:#dcfce7;color:#15803d}
+.comp-diff.pos{background:#fee2e2;color:#b91c1c}
+.comp-diff.eq{background:var(--surface2);color:var(--muted)}
+
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.sc h3{font-size:11px;font-weight:700;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.sr:last-child{border-bottom:none}
+.sr .l{color:var(--muted)}
+.sr .v{font-family:'JetBrains Mono',monospace;font-weight:700}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.stat-card{padding:12px;border-radius:10px;border:2px solid var(--border);background:var(--surface)}
+.stat-card.a1{border-color:var(--accent);background:linear-gradient(135deg,var(--glow),transparent)}
+.stat-card.a2{border-color:var(--accent2);background:linear-gradient(135deg,var(--glow2),transparent)}
+.stat-card h4{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:6px}
+.stat-card .bigval{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1}
+.stat-card .smval{font-size:11px;color:var(--muted);margin-top:4px}
+.stat-card.a1 .bigval{color:var(--accent)}
+.stat-card.a2 .bigval{color:var(--accent2)}
+
+.verdict{padding:14px;border-radius:10px;border:2px solid;background:var(--surface);margin-bottom:10px}
+.verdict.win1{border-color:var(--accent);background:linear-gradient(135deg,var(--glow),transparent)}
+.verdict.win2{border-color:var(--accent2);background:linear-gradient(135deg,var(--glow2),transparent)}
+.verdict .v-title{font-size:11px;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:4px}
+.verdict .v-winner{font-size:16px;font-weight:800;margin-bottom:8px}
+.verdict .v-text{font-size:12px;line-height:1.6;color:var(--text)}
+
+.dist-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin-top:6px;margin-bottom:4px;background:var(--surface2)}
+.dist-seg{display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.dist-label{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:4px}
+
+.ft{padding:8px 12px;border-top:1px solid var(--border);font-size:9px;color:var(--muted);text-align:center;line-height:1.4;flex-shrink:0}
+.card.ofi1-mode{border-left:3px solid var(--accent)}
+.card.ofi2-mode{border-left:3px solid var(--accent2)}
+
+.btn-clear{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:10px;cursor:pointer;color:var(--muted)}
+.btn-clear:hover{background:var(--surface2)}
+
+.resumen-tabla{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11px}
+.resumen-tabla thead th{background:var(--surface2);padding:8px 6px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+.resumen-tabla th.num,.resumen-tabla td.num{text-align:right;font-family:'JetBrains Mono',monospace}
+.resumen-tabla tbody tr{border-bottom:1px solid var(--border);transition:.15s}
+.resumen-tabla tbody tr:hover{background:var(--surface2)}
+.resumen-tabla tbody tr:last-child{border-bottom:none}
+.resumen-tabla td{padding:7px 6px;color:var(--text)}
+.resumen-tabla td:nth-child(2){color:var(--muted);font-size:10px}
+.resumen-tabla .r-pos{color:var(--green);font-weight:700}
+.resumen-tabla .r-neg{color:var(--red);font-weight:700}
+.resumen-tabla tfoot td{padding:9px 6px;font-weight:700;font-size:11px}
+.resumen-tabla tfoot tr.tf-prom{background:var(--surface2);border-top:2px solid var(--border)}
+.resumen-tabla tfoot tr.tf-tot{background:var(--glow);border-top:1px solid var(--border)}
+.tabla-nota{font-size:10px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5;padding:0 4px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1><span>LANS</span> — Comparativo de Oficinas</h1>
+    <div class="sub">35 empleados · Tlalpan (Actual) vs Los Alpes (Propuesta)</div>
+  </div>
+  <div class="legend">
+    <div class="legend-i"><div class="legend-s" style="background:var(--accent);border-radius:3px"></div>Oficina Actual</div>
+    <div class="legend-i"><div class="legend-s" style="background:var(--accent2);border-radius:3px"></div>Oficina Nueva</div>
+    <div class="legend-i"><div class="legend-d" style="background:var(--green)"></div>≤30m</div>
+    <div class="legend-i"><div class="legend-d" style="background:var(--yellow)"></div>30-60m</div>
+    <div class="legend-i"><div class="legend-d" style="background:var(--orange)"></div>60-90m</div>
+    <div class="legend-i"><div class="legend-d" style="background:var(--red)"></div>>90m</div>
+  </div>
+</div>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="panel">
+    <div class="mode-switch">
+      <button class="mode-btn on1" id="bt1" onclick="setMode(1)">📍 Actual</button>
+      <button class="mode-btn" id="bt2" onclick="setMode(2)">🆕 Nueva</button>
+      <button class="mode-btn" id="btC" onclick="setMode('C')">⚖️ Comparar</button>
+    </div>
+    <div class="tabs">
+      <div class="tab on" data-t="personas" onclick="switchTab('personas')">Personas</div>
+      <div class="tab" data-t="resumen" onclick="switchTab('resumen')">Resumen</div>
+    </div>
+    <div class="pc" id="pc"></div>
+    <div class="ft">Tiempos estimados · 🚗 15 km/h hora pico · 🚌 12 km/h transporte público</div>
+  </div>
+</div>
+
+<script>
+const O1={lat:19.3040,lng:-99.1435,name:'Oficina Actual',sub:'Calz. Tlalpan 3267, Coyoacán',color:'#2563eb'};
+const O2={lat:19.3570,lng:-99.1985,name:'Oficina Nueva',sub:'Anillo Perif. 2165, Los Alpes, Álvaro Obregón',color:'#9333ea'};
+
+const P=[
+{id:848,zona:"Liberales de 1857",alc:"Álvaro Obregón",lat:19.364,lng:-99.216,d1:14.2,c1:57,p1:71,d2:2.6,c2:10,p2:13},
+{id:5,zona:"Lomas Verdes",alc:"Atizapán (Edo.Méx)",lat:19.526,lng:-99.243,d1:40.2,c1:161,p1:201,d2:29.0,c2:116,p2:145},
+{id:839,zona:"La Sardaña",alc:"Tultitlán",lat:19.625,lng:-99.162,d1:53.6,c1:214,p1:268,d2:45.1,c2:180,p2:225},
+{id:945,zona:"San Pedro Zacatenco",alc:"Gustavo A. Madero",lat:19.504,lng:-99.129,d1:33.4,c1:134,p1:167,d2:26.8,c2:107,p2:134},
+{id:706,zona:"Bellavista",alc:"Metepec (Edo.Méx)",lat:19.256,lng:-99.592,d1:71.1,c1:284,p1:355,d2:64.2,c2:257,p2:321},
+{id:864,zona:"Tierra Colorada",alc:"Magdalena Contreras",lat:19.312,lng:-99.235,d1:13.5,c1:54,p1:68,d2:8.8,c2:35,p2:44},
+{id:716,zona:"Col. Morelos",alc:"Venustiano Carranza",lat:19.437,lng:-99.122,d1:20.9,c1:84,p1:105,d2:16.8,c2:67,p2:84},
+{id:952,zona:"Jardines del Pedregal",alc:"Álvaro Obregón",lat:19.312,lng:-99.21,d1:9.8,c1:39,p1:49,d2:7.2,c2:29,p2:36},
+{id:6,zona:"Col. Nicolás Bravo",alc:"Venustiano Carranza",lat:19.419,lng:-99.107,d1:18.7,c1:75,p1:93,d2:16.5,c2:66,p2:83},
+{id:1,zona:"Zona Six Flags",alc:"Tlalpan",lat:19.295,lng:-99.218,d1:11.0,c1:44,p1:55,d2:10.1,c2:40,p2:50},
+{id:675,zona:"Agrícola Oriental",alc:"Iztacalco",lat:19.395,lng:-99.087,d1:16.4,c1:66,p1:82,d2:17.4,c2:70,p2:87},
+{id:931,zona:"La Asunción",alc:"Iztacalco",lat:19.388,lng:-99.092,d1:15.1,c1:60,p1:76,d2:16.4,c2:65,p2:82},
+{id:975,zona:"Santo Domingo",alc:"Coyoacán",lat:19.323,lng:-99.169,d1:4.4,c1:18,p1:22,d2:6.4,c2:25,p2:32},
+{id:183,zona:"El Caracol",alc:"Coyoacán",lat:19.335,lng:-99.148,d1:4.5,c1:18,p1:23,d2:8.2,c2:33,p2:41},
+{id:921,zona:"Barrio Guadalupe",alc:"Iztapalapa",lat:19.357,lng:-99.083,d1:12.1,c1:49,p1:61,d2:17.0,c2:68,p2:85},
+{id:226,zona:"Ejército de Agua Prieta",alc:"Iztapalapa",lat:19.364,lng:-99.068,d1:14.5,c1:58,p1:72,d2:19.2,c2:77,p2:96},
+{id:367,zona:"Olivar Santa María",alc:"Tlalpan",lat:19.295,lng:-99.179,d1:5.0,c1:20,p1:25,d2:10.1,c2:40,p2:50},
+{id:782,zona:"San Miguel Ajusco",alc:"Tlalpan",lat:19.233,lng:-99.205,d1:14.3,c1:57,p1:71,d2:19.3,c2:77,p2:97},
+{id:841,zona:"Los Reyes",alc:"Coyoacán",lat:19.333,lng:-99.139,d1:4.2,c1:17,p1:21,d2:9.5,c2:38,p2:48},
+{id:758,zona:"Fuentes Brotantes",alc:"Tlalpan",lat:19.3,lng:-99.171,d1:3.8,c1:15,p1:19,d2:9.7,c2:39,p2:49},
+{id:842,zona:"Tlalpan",alc:"Tlalpan",lat:19.29,lng:-99.168,d1:3.9,c1:16,p1:20,d2:11.4,c2:45,p2:57},
+{id:785,zona:"Consejo Agrarista",alc:"Iztapalapa",lat:19.337,lng:-99.07,d1:12.0,c1:48,p1:60,d2:19.1,c2:77,p2:96},
+{id:58,zona:"Lomas de San Sebastián",alc:"La Paz (Edo.Méx)",lat:19.356,lng:-98.967,d1:29.1,c1:116,p1:146,d2:36.4,c2:146,p2:182},
+{id:603,zona:"La Era",alc:"Iztapalapa",lat:19.349,lng:-99.051,d1:15.3,c1:61,p1:76,d2:23.3,c2:93,p2:116},
+{id:956,zona:"Agrícola Metropolitana",alc:"Tláhuac",lat:19.313,lng:-99.068,d1:11.2,c1:45,p1:56,d2:20.4,c2:81,p2:102},
+{id:10,zona:"Misión San Tomás",alc:"Tlalpan",lat:19.285,lng:-99.158,d1:3.4,c1:14,p1:17,d2:12.7,c2:51,p2:63},
+{id:997,zona:"Santiago Tepalcatlalpan",alc:"Xochimilco",lat:19.273,lng:-99.135,d1:4.6,c1:19,p1:23,d2:16.1,c2:64,p2:80},
+{id:851,zona:"Santa Úrsula Coapa",alc:"Coyoacán",lat:19.304,lng:-99.143,d1:0.1,c1:0,p1:0,d2:11.6,c2:46,p2:58},
+{id:798,zona:"Xochimilco Centro",alc:"Xochimilco",lat:19.262,lng:-99.104,d1:8.7,c1:35,p1:44,d2:20.3,c2:81,p2:101},
+{id:19,zona:"Prol. Gpe I Ramírez",alc:"Xochimilco",lat:19.255,lng:-99.11,d1:9.1,c1:36,p1:45,d2:20.5,c2:82,p2:103},
+{id:36,zona:"Bo. Miguel Hidalgo",alc:"Tláhuac",lat:19.281,lng:-99.048,d1:14.5,c1:58,p1:72,d2:26.9,c2:107,p2:134},
+{id:409,zona:"Bo. La Asunción",alc:"Tláhuac",lat:19.286,lng:-99.043,d1:15.0,c1:60,p1:75,d2:27.2,c2:109,p2:136},
+{id:242,zona:"Santa Ana Zapotitlán",alc:"Tláhuac",lat:19.273,lng:-99.052,d1:14.3,c1:57,p1:71,d2:27.0,c2:108,p2:135},
+{id:48,zona:"La Cañada",alc:"Xochimilco",lat:19.248,lng:-99.09,d1:11.7,c1:47,p1:59,d2:24.9,c2:100,p2:125},
+{id:250,zona:"San Salvador Cuauhtenco",alc:"Milpa Alta",lat:19.207,lng:-99.068,d1:18.7,c1:75,p1:94,d2:32.4,c2:129,p2:162},
+];
+
+P.forEach(p=>p.diff=p.c2-p.c1);
+
+let mode=1, curTab='personas', selPerson=null;
+
+function tc(m){return m<=30?'#16a34a':m<=60?'#ca8a04':m<=90?'#ea580c':'#dc2626'}
+
+const map=L.map('map',{center:[19.35,-99.15],zoom:11,zoomControl:false});
+L.control.zoom({position:'bottomleft'}).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:18}).addTo(map);
+
+function mkIcon(color,size,label,shape='circle'){
+  const style = shape==='square'
+    ? `border-radius:5px`
+    : `border-radius:50%`;
+  return L.divIcon({className:'',iconSize:[size,size],iconAnchor:[size/2,size/2],
+    html:`<div style="width:${size}px;height:${size}px;${style};background:${color};border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:${size*.4}px;color:#fff;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer">${label}</div>`});
+}
+
+const ofi1Marker=L.marker([O1.lat,O1.lng],{icon:mkIcon(O1.color,38,'★','square'),zIndexOffset:2000}).addTo(map);
+ofi1Marker.bindPopup(`<div class="pn">📍 ${O1.name}</div><div class="pz">${O1.sub}</div>`);
+
+const ofi2Marker=L.marker([O2.lat,O2.lng],{icon:mkIcon(O2.color,38,'◆','square'),zIndexOffset:2000}).addTo(map);
+ofi2Marker.bindPopup(`<div class="pn">🆕 ${O2.name}</div><div class="pz">${O2.sub}</div>`);
+
+let markers=[],lines1=[],lines2=[];
+P.forEach((p,i)=>{
+  const m=L.marker([p.lat,p.lng],{icon:mkIcon('#16a34a',22,p.id.toString().slice(-2)),zIndexOffset:500}).addTo(map);
+  m.on('click',()=>selectPerson(i));
+  markers.push(m);
+  const l1=L.polyline([[O1.lat,O1.lng],[p.lat,p.lng]],{color:O1.color,weight:1.3,opacity:.25,dashArray:'5 4'}).addTo(map);
+  const l2=L.polyline([[O2.lat,O2.lng],[p.lat,p.lng]],{color:O2.color,weight:1.3,opacity:.25,dashArray:'5 4'}).addTo(map);
+  lines1.push(l1);lines2.push(l2);
+});
+
+function updateMap(){
+  P.forEach((p,i)=>{
+    const on=selPerson===i;
+    let color,car;
+    if(mode===1){color=tc(p.c1);car=p.c1}
+    else if(mode===2){color=tc(p.c2);car=p.c2}
+    else{color=p.diff<0?'#16a34a':p.diff>0?'#dc2626':'#6b7280';car=p.diff}
+    markers[i].setIcon(mkIcon(color,on?28:22,p.id.toString().slice(-2)));
+    markers[i].unbindPopup();
+    markers[i].bindPopup(`
+      <div class="pn">Emp. ${p.id}</div>
+      <div class="pz">${p.zona} · ${p.alc}</div>
+      <div class="pm">
+        <div></div><div class="pm-h">Actual</div><div class="pm-h">Nueva</div>
+        <div>🚗</div><div class="v">${p.c1}m</div><div class="v">${p.c2}m</div>
+        <div>🚌</div><div class="v">${p.p1}m</div><div class="v">${p.p2}m</div>
+        <div>📏</div><div class="v">${p.d1}km</div><div class="v">${p.d2}km</div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #eee;font-size:11px">
+        Diferencia: <span class="${p.diff<0?'diff-neg':p.diff>0?'diff-pos':''}">${p.diff>0?'+':''}${p.diff} min</span>
+      </div>`);
+    
+    // Lines visibility
+    lines1[i].setStyle({opacity:mode===2?0:(on?.8:.2),weight:on&&mode!==2?3:1.3,dashArray:on?null:'5 4'});
+    lines2[i].setStyle({opacity:mode===1?0:(on?.8:.2),weight:on&&mode!==1?3:1.3,dashArray:on?null:'5 4'});
+  });
+}
+
+function setMode(m){
+  mode=m;
+  document.getElementById('bt1').className='mode-btn'+(m===1?' on1':'');
+  document.getElementById('bt2').className='mode-btn'+(m===2?' on2':'');
+  document.getElementById('btC').className='mode-btn'+(m==='C'?' onC':'');
+  updateMap();
+  renderPanel();
+}
+
+function selectPerson(i){
+  selPerson=selPerson===i?null:i;
+  updateMap();
+  renderPanel();
+  if(selPerson!==null){
+    const p=P[selPerson];
+    map.flyTo([p.lat,p.lng],13,{duration:.5});
+    markers[selPerson].openPopup();
+    setTimeout(()=>{const c=document.getElementById('c'+selPerson);if(c)c.scrollIntoView({behavior:'smooth',block:'center'})},100);
+  }
+}
+
+function switchTab(t){curTab=t;document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.t===t));renderPanel()}
+
+function renderPanel(){
+  const el=document.getElementById('pc');
+  if(curTab==='personas') renderPersonas(el);
+  else renderResumen(el);
+}
+
+function renderPersonas(el){
+  let h='';
+  const sorted=[...P].map((p,i)=>({...p,idx:P.indexOf(p)}));
+  
+  if(mode===1) sorted.sort((a,b)=>a.c1-b.c1);
+  else if(mode===2) sorted.sort((a,b)=>a.c2-b.c2);
+  else sorted.sort((a,b)=>a.diff-b.diff);
+  
+  const modeLabel = mode===1?'ordenados por tiempo a OFICINA ACTUAL'
+    : mode===2?'ordenados por tiempo a OFICINA NUEVA'
+    : 'ordenados por mayor MEJORA → mayor EMPEORAMIENTO';
+  h+=`<div style="font-size:10px;color:var(--muted);margin-bottom:8px">${P.length} empleados · ${modeLabel}</div>`;
+  
+  sorted.forEach(p=>{
+    const cls = mode===1?'ofi1-mode':mode===2?'ofi2-mode':'';
+    const diffCls = p.diff<0?'neg':p.diff>0?'pos':'eq';
+    const diffStr = p.diff===0?'=':(p.diff>0?'+':'')+p.diff;
+    
+    h+=`<div class="card ${cls} ${selPerson===p.idx?'on':''}" onclick="selectPerson(${p.idx})" id="c${p.idx}">
+      <div class="n">Emp. ${p.id} — ${p.zona}</div>
+      <div class="z">${p.alc}</div>
+      <div class="comp-row">
+        <div class="comp-box ofi1"><div class="lbl">ACTUAL 🚗</div><div class="val" style="color:${tc(p.c1)}">${p.c1}m</div></div>
+        <div class="comp-box ofi2"><div class="lbl">NUEVA 🚗</div><div class="val" style="color:${tc(p.c2)}">${p.c2}m</div></div>
+        <div class="comp-diff ${diffCls}">${diffStr}</div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+function renderResumen(el){
+  const sorted=[...P].sort((a,b)=>a.diff-b.diff);
+  
+  // Totales
+  const tot1=P.reduce((s,p)=>s+p.c1,0);
+  const tot2=P.reduce((s,p)=>s+p.c2,0);
+  const totDiff=tot2-tot1;
+  const avg1=Math.round(tot1/P.length);
+  const avg2=Math.round(tot2/P.length);
+  const avgDiff=avg2-avg1;
+  
+  let h=`<table class="resumen-tabla">
+    <thead>
+      <tr>
+        <th>Emp.</th>
+        <th>Zona</th>
+        <th class="num">Actual</th>
+        <th class="num">Nueva</th>
+        <th class="num">Δ</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  sorted.forEach(p=>{
+    const cls=p.diff<0?'r-pos':p.diff>0?'r-neg':'';
+    const sign=p.diff>0?'+':'';
+    h+=`<tr>
+      <td>${p.id}</td>
+      <td>${p.zona}</td>
+      <td class="num">${p.c1}</td>
+      <td class="num">${p.c2}</td>
+      <td class="num ${cls}">${sign}${p.diff}</td>
+    </tr>`;
+  });
+  
+  // Footer con totales y promedios
+  const totCls=totDiff<0?'r-pos':totDiff>0?'r-neg':'';
+  const avgCls=avgDiff<0?'r-pos':avgDiff>0?'r-neg':'';
+  h+=`</tbody>
+    <tfoot>
+      <tr class="tf-prom">
+        <td colspan="2">PROMEDIO</td>
+        <td class="num">${avg1}</td>
+        <td class="num">${avg2}</td>
+        <td class="num ${avgCls}">${avgDiff>0?'+':''}${avgDiff}</td>
+      </tr>
+      <tr class="tf-tot">
+        <td colspan="2">TOTAL EQUIPO</td>
+        <td class="num">${tot1}</td>
+        <td class="num">${tot2}</td>
+        <td class="num ${totCls}">${totDiff>0?'+':''}${totDiff}</td>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="tabla-nota">Tiempos en minutos · 🚗 carro hora pico · Δ = diferencia (Nueva − Actual)<br>Verde = mejora con la nueva oficina · Rojo = empeora</div>`;
+  
+  el.innerHTML=h;
+}
+
+updateMap();
+renderPanel();
+const allPts=[...P.map(p=>[p.lat,p.lng]),[O1.lat,O1.lng],[O2.lat,O2.lng]];
+map.fitBounds(allPts,{padding:[30,30]});
+</script>
+</body>
+</html>
