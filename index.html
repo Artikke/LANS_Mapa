@@ -299,44 +299,50 @@
     el.innerHTML=h;
   }
 
-  function renderResumen(el){
-    const sorted=[...P].sort((a,b)=>td(a)-td(b));
-    const tot1=P.reduce((s,p)=>s+t1(p),0),tot2=P.reduce((s,p)=>s+t2(p),0),totD=tot2-tot1;
+   function renderResumen(el){
+    const sorted=[...P].sort((a,b)=>a.diff-b.diff);
+    const tot1=P.reduce((s,p)=>s+p.c1,0),tot2=P.reduce((s,p)=>s+p.c2,0),totD=tot2-tot1;
     const avg1=Math.round(tot1/P.length),avg2=Math.round(tot2/P.length),avgD=avg2-avg1;
+    const totp1=P.reduce((s,p)=>s+p.p1,0),totp2=P.reduce((s,p)=>s+p.p2,0),totpD=totp2-totp1;
+    const avgp1=Math.round(totp1/P.length),avgp2=Math.round(totp2/P.length),avgpD=avgp2-avgp1;
 
     let h=`<table class="resumen-tabla">
       <thead>
         <tr>
-          <th>Emp.</th><th>Zona</th>
-          <th class="num">Actual ${tIcon()}</th>
-          <th class="num">Nueva ${tIcon()}</th>
-          <th class="num">Δ</th>
+          <th rowspan="2">Emp.</th>
+          <th rowspan="2">Zona</th>
+          <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border)">🚗 Auto</th>
+          <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border)">🚌 Transporte</th>
+        </tr>
+        <tr>
+          <th class="num">Actual</th><th class="num">Nueva</th><th class="num">Δ</th>
+          <th class="num">Actual</th><th class="num">Nueva</th><th class="num">Δ</th>
         </tr>
       </thead><tbody>`;
 
     sorted.forEach(p=>{
-      const d=td(p);
-      const cls=d<0?'r-pos':d>0?'r-neg':'';
+      const dc=p.diff<0?'r-pos':p.diff>0?'r-neg':'';
+      const dp=p.pdiff<0?'r-pos':p.pdiff>0?'r-neg':'';
       h+=`<tr>
         <td>${p.id}</td><td>${p.zona}</td>
-        <td class="num">${t1(p)}</td>
-        <td class="num">${t2(p)}</td>
-        <td class="num ${cls}">${d>0?'+':''}${d}</td>
+        <td class="num">${p.c1}</td><td class="num">${p.c2}</td>
+        <td class="num ${dc}">${p.diff>0?'+':''}${p.diff}</td>
+        <td class="num">${p.p1}</td><td class="num">${p.p2}</td>
+        <td class="num ${dp}">${p.pdiff>0?'+':''}${p.pdiff}</td>
       </tr>`;
     });
 
-    const totCls=totD<0?'r-pos':totD>0?'r-neg':'';
-    const avgCls=avgD<0?'r-pos':avgD>0?'r-neg':'';
+    const fC=(v,cls)=>`<td class="num ${cls}">${v>0?'+':''}${v}</td>`;
     h+=`</tbody><tfoot>
       <tr class="tf-prom">
         <td colspan="2">PROMEDIO</td>
-        <td class="num">${avg1}</td><td class="num">${avg2}</td>
-        <td class="num ${avgCls}">${avgD>0?'+':''}${avgD}</td>
+        <td class="num">${avg1}</td><td class="num">${avg2}</td>${fC(avgD,avgD<0?'r-pos':avgD>0?'r-neg':'')}
+        <td class="num">${avgp1}</td><td class="num">${avgp2}</td>${fC(avgpD,avgpD<0?'r-pos':avgpD>0?'r-neg':'')}
       </tr>
       <tr class="tf-tot">
         <td colspan="2">TOTAL EQUIPO</td>
-        <td class="num">${tot1}</td><td class="num">${tot2}</td>
-        <td class="num ${totCls}">${totD>0?'+':''}${totD}</td>
+        <td class="num">${tot1}</td><td class="num">${tot2}</td>${fC(totD,totD<0?'r-pos':totD>0?'r-neg':'')}
+        <td class="num">${totp1}</td><td class="num">${totp2}</td>${fC(totpD,totpD<0?'r-pos':totpD>0?'r-neg':'')}
       </tr>
     </tfoot></table>
     <div class="tabla-nota">Tiempos en minutos · Δ = (Nueva − Actual) · Verde = mejora · Rojo = empeora</div>`;
