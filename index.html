@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+  <!DOCTYPE html>
   <html lang="es">
   <head>
   <meta charset="UTF-8">
@@ -48,6 +48,11 @@
   .mode-btn.on2{border-color:var(--accent2);background:var(--glow2);color:var(--accent2)}
   .mode-btn.onC{border-color:var(--text);background:var(--surface2);color:var(--text)}
 
+  .transport-switch{display:flex;padding:8px 12px;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border)}
+  .t-btn{flex:1;padding:7px;border-radius:8px;border:1px solid
+  var(--border);background:var(--surface);color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:.2s;text-align:center}
+  .t-btn.on{border-color:var(--accent);background:var(--glow);color:var(--accent)}
+
   .tabs{display:flex;border-bottom:1px solid var(--border);padding:10px 10px 0;flex-shrink:0}
   .tab{padding:10px 12px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
   .tab:hover{color:var(--text)}
@@ -72,40 +77,9 @@
   .comp-diff.pos{background:#fee2e2;color:#b91c1c}
   .comp-diff.eq{background:var(--surface2);color:var(--muted)}
 
-  .sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
-  .sc h3{font-size:11px;font-weight:700;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-  .sr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
-  .sr:last-child{border-bottom:none}
-  .sr .l{color:var(--muted)}
-  .sr .v{font-family:'JetBrains Mono',monospace;font-weight:700}
-
-  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-  .stat-card{padding:12px;border-radius:10px;border:2px solid var(--border);background:var(--surface)}
-  .stat-card.a1{border-color:var(--accent);background:linear-gradient(135deg,var(--glow),transparent)}
-  .stat-card.a2{border-color:var(--accent2);background:linear-gradient(135deg,var(--glow2),transparent)}
-  .stat-card h4{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:6px}
-  .stat-card .bigval{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1}
-  .stat-card .smval{font-size:11px;color:var(--muted);margin-top:4px}
-  .stat-card.a1 .bigval{color:var(--accent)}
-  .stat-card.a2 .bigval{color:var(--accent2)}
-
-  .verdict{padding:14px;border-radius:10px;border:2px solid;background:var(--surface);margin-bottom:10px}
-  .verdict.win1{border-color:var(--accent);background:linear-gradient(135deg,var(--glow),transparent)}
-  .verdict.win2{border-color:var(--accent2);background:linear-gradient(135deg,var(--glow2),transparent)}
-  .verdict .v-title{font-size:11px;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:4px}
-  .verdict .v-winner{font-size:16px;font-weight:800;margin-bottom:8px}
-  .verdict .v-text{font-size:12px;line-height:1.6;color:var(--text)}
-
-  .dist-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin-top:6px;margin-bottom:4px;background:var(--surface2)}
-  .dist-seg{display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
-  .dist-label{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:4px}
-
   .ft{padding:8px 12px;border-top:1px solid var(--border);font-size:9px;color:var(--muted);text-align:center;line-height:1.4;flex-shrink:0}
   .card.ofi1-mode{border-left:3px solid var(--accent)}
   .card.ofi2-mode{border-left:3px solid var(--accent2)}
-
-  .btn-clear{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:10px;cursor:pointer;color:var(--muted)}
-  .btn-clear:hover{background:var(--surface2)}
 
   .resumen-tabla{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11px}
   .resumen-tabla thead th{background:var(--surface2);padding:8px 6px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.5px;border-bottom:2px
@@ -148,12 +122,16 @@
         <button class="mode-btn" id="bt2" onclick="setMode(2)">🆕 Nueva</button>
         <button class="mode-btn" id="btC" onclick="setMode('C')">⚖️  Comparar</button>
       </div>
+      <div class="transport-switch">
+        <button class="t-btn on" id="tAuto" onclick="setTransport('auto')">🚗 Auto</button>
+        <button class="t-btn" id="tTransit" onclick="setTransport('transit')">🚌 Transporte público</button>
+      </div>
       <div class="tabs">
         <div class="tab on" data-t="personas" onclick="switchTab('personas')">Personas</div>
         <div class="tab" data-t="resumen" onclick="switchTab('resumen')">Resumen</div>
       </div>
       <div class="pc" id="pc"></div>
-      <div class="ft" id="ft">⏳ Calculando tiempos reales de manejo...</div>
+      <div class="ft">Tiempos estimados · 🚗 15 km/h hora pico · 🚌 12 km/h transporte público</div>
     </div>
   </div>
 
@@ -201,7 +179,7 @@
 
   P.forEach(p=>{p.diff=p.c2-p.c1; p.pdiff=p.p2-p.p1;});
 
-  let mode=1, curTab='personas', selPerson=null;
+  let mode=1, tMode='auto', curTab='personas', selPerson=null;
 
   function tc(m){return m<=30?'#16a34a':m<=60?'#ca8a04':m<=90?'#ea580c':'#dc2626'}
 
@@ -231,13 +209,18 @@
     lines1.push(l1);lines2.push(l2);
   });
 
+  function t1(p){return tMode==='auto'?p.c1:p.p1}
+  function t2(p){return tMode==='auto'?p.c2:p.p2}
+  function td(p){return tMode==='auto'?p.diff:p.pdiff}
+  function tIcon(){return tMode==='auto'?'🚗':'🚌'}
+
   function updateMap(){
     P.forEach((p,i)=>{
       const on=selPerson===i;
       let color;
-      if(mode===1) color=tc(p.c1);
-      else if(mode===2) color=tc(p.c2);
-      else color=p.diff<0?'#16a34a':p.diff>0?'#dc2626':'#6b7280';
+      if(mode===1) color=tc(t1(p));
+      else if(mode===2) color=tc(t2(p));
+      else color=td(p)<0?'#16a34a':td(p)>0?'#dc2626':'#6b7280';
       markers[i].setIcon(mkIcon(color,on?28:22,p.id.toString().slice(-2)));
       markers[i].unbindPopup();
       markers[i].bindPopup(`
@@ -250,7 +233,7 @@
           <div>📏</div><div class="v">${p.d1}km</div><div class="v">${p.d2}km</div>
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid #eee;font-size:11px">
-          Diferencia 🚗: <span class="${p.diff<0?'diff-neg':p.diff>0?'diff-pos':''}">${p.diff>0?'+':''}${p.diff} min</span>
+          Diferencia ${tIcon()}: <span class="${td(p)<0?'diff-neg':td(p)>0?'diff-pos':''}">${td(p)>0?'+':''}${td(p)} min</span>
         </div>`);
       lines1[i].setStyle({opacity:mode===2?0:(on?.8:.2),weight:on&&mode!==2?3:1.3,dashArray:on?null:'5 4'});
       lines2[i].setStyle({opacity:mode===1?0:(on?.8:.2),weight:on&&mode!==1?3:1.3,dashArray:on?null:'5 4'});
@@ -262,14 +245,19 @@
     document.getElementById('bt1').className='mode-btn'+(m===1?' on1':'');
     document.getElementById('bt2').className='mode-btn'+(m===2?' on2':'');
     document.getElementById('btC').className='mode-btn'+(m==='C'?' onC':'');
-    updateMap();
-    renderPanel();
+    updateMap();renderPanel();
+  }
+
+  function setTransport(t){
+    tMode=t;
+    document.getElementById('tAuto').className='t-btn'+(t==='auto'?' on':'');
+    document.getElementById('tTransit').className='t-btn'+(t==='transit'?' on':'');
+    updateMap();renderPanel();
   }
 
   function selectPerson(i){
     selPerson=selPerson===i?null:i;
-    updateMap();
-    renderPanel();
+    updateMap();renderPanel();
     if(selPerson!==null){
       const p=P[selPerson];
       map.flyTo([p.lat,p.lng],13,{duration:.5});
@@ -287,23 +275,23 @@
   }
 
   function renderPersonas(el){
-    let h='';
-    const sorted=[...P].map((p,i)=>({...p,idx:P.indexOf(p)}));
-    if(mode===1) sorted.sort((a,b)=>a.c1-b.c1);
-    else if(mode===2) sorted.sort((a,b)=>a.c2-b.c2);
-    else sorted.sort((a,b)=>a.diff-b.diff);
+    const sorted=[...P].map(p=>({...p,idx:P.indexOf(p)}));
+    if(mode===1) sorted.sort((a,b)=>t1(a)-t1(b));
+    else if(mode===2) sorted.sort((a,b)=>t2(a)-t2(b));
+    else sorted.sort((a,b)=>td(a)-td(b));
     const modeLabel=mode===1?'ordenados por tiempo a OFICINA ACTUAL':mode===2?'ordenados por tiempo a OFICINA NUEVA':'ordenados por mayor MEJORA → mayor EMPEORAMIENTO';
-    h+=`<div style="font-size:10px;color:var(--muted);margin-bottom:8px">${P.length} empleados · ${modeLabel}</div>`;
+    let h=`<div style="font-size:10px;color:var(--muted);margin-bottom:8px">${P.length} empleados · ${modeLabel}</div>`;
     sorted.forEach(p=>{
       const cls=mode===1?'ofi1-mode':mode===2?'ofi2-mode':'';
-      const diffCls=p.diff<0?'neg':p.diff>0?'pos':'eq';
-      const diffStr=p.diff===0?'=':(p.diff>0?'+':'')+p.diff;
+      const diff=td(p);
+      const diffCls=diff<0?'neg':diff>0?'pos':'eq';
+      const diffStr=diff===0?'=':(diff>0?'+':'')+diff;
       h+=`<div class="card ${cls} ${selPerson===p.idx?'on':''}" onclick="selectPerson(${p.idx})" id="c${p.idx}">
         <div class="n">Emp. ${p.id} — ${p.zona}</div>
         <div class="z">${p.alc}</div>
         <div class="comp-row">
-          <div class="comp-box ofi1"><div class="lbl">ACTUAL 🚗</div><div class="val" style="color:${tc(p.c1)}">${p.c1}m</div></div>
-          <div class="comp-box ofi2"><div class="lbl">NUEVA 🚗</div><div class="val" style="color:${tc(p.c2)}">${p.c2}m</div></div>
+          <div class="comp-box ofi1"><div class="lbl">ACTUAL ${tIcon()}</div><div class="val" style="color:${tc(t1(p))}">${t1(p)}m</div></div>
+          <div class="comp-box ofi2"><div class="lbl">NUEVA ${tIcon()}</div><div class="val" style="color:${tc(t2(p))}">${t2(p)}m</div></div>
           <div class="comp-diff ${diffCls}">${diffStr}</div>
         </div>
       </div>`;
@@ -312,87 +300,51 @@
   }
 
   function renderResumen(el){
-    const sorted=[...P].sort((a,b)=>a.diff-b.diff);
-    const tot1=P.reduce((s,p)=>s+p.c1,0),tot2=P.reduce((s,p)=>s+p.c2,0),totDiff=tot2-tot1;
-    const avg1=Math.round(tot1/P.length),avg2=Math.round(tot2/P.length),avgDiff=avg2-avg1;
-    const totp1=P.reduce((s,p)=>s+p.p1,0),totp2=P.reduce((s,p)=>s+p.p2,0),totpDiff=totp2-totp1;
-    const avgp1=Math.round(totp1/P.length),avgp2=Math.round(totp2/P.length),avgpDiff=avgp2-avgp1;
+    const sorted=[...P].sort((a,b)=>td(a)-td(b));
+    const tot1=P.reduce((s,p)=>s+t1(p),0),tot2=P.reduce((s,p)=>s+t2(p),0),totD=tot2-tot1;
+    const avg1=Math.round(tot1/P.length),avg2=Math.round(tot2/P.length),avgD=avg2-avg1;
 
     let h=`<table class="resumen-tabla">
       <thead>
         <tr>
-          <th rowspan="2">Emp.</th>
-          <th rowspan="2">Zona</th>
-          <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border)">🚗 Auto</th>
-          <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border)">🚌 Transporte</th>
-        </tr>
-        <tr>
-          <th class="num">Actual</th><th class="num">Nueva</th><th class="num">Δ</th>
-          <th class="num">Actual</th><th class="num">Nueva</th><th class="num">Δ</th>
+          <th>Emp.</th><th>Zona</th>
+          <th class="num">Actual ${tIcon()}</th>
+          <th class="num">Nueva ${tIcon()}</th>
+          <th class="num">Δ</th>
         </tr>
       </thead><tbody>`;
 
     sorted.forEach(p=>{
-      const dc=p.diff<0?'r-pos':p.diff>0?'r-neg':'';
-      const dp=p.pdiff<0?'r-pos':p.pdiff>0?'r-neg':'';
+      const d=td(p);
+      const cls=d<0?'r-pos':d>0?'r-neg':'';
       h+=`<tr>
         <td>${p.id}</td><td>${p.zona}</td>
-        <td class="num">${p.c1}</td><td class="num">${p.c2}</td>
-        <td class="num ${dc}">${p.diff>0?'+':''}${p.diff}</td>
-        <td class="num">${p.p1}</td><td class="num">${p.p2}</td>
-        <td class="num ${dp}">${p.pdiff>0?'+':''}${p.pdiff}</td>
+        <td class="num">${t1(p)}</td>
+        <td class="num">${t2(p)}</td>
+        <td class="num ${cls}">${d>0?'+':''}${d}</td>
       </tr>`;
     });
 
-    const fC=(v,cls)=>`<td class="num ${cls}">${v>0?'+':''}${v}</td>`;
-    const totCls=totDiff<0?'r-pos':totDiff>0?'r-neg':'';
-    const avgCls=avgDiff<0?'r-pos':avgDiff>0?'r-neg':'';
-    const totpCls=totpDiff<0?'r-pos':totpDiff>0?'r-neg':'';
-    const avgpCls=avgpDiff<0?'r-pos':avgpDiff>0?'r-neg':'';
-
+    const totCls=totD<0?'r-pos':totD>0?'r-neg':'';
+    const avgCls=avgD<0?'r-pos':avgD>0?'r-neg':'';
     h+=`</tbody><tfoot>
       <tr class="tf-prom">
         <td colspan="2">PROMEDIO</td>
-        <td class="num">${avg1}</td><td class="num">${avg2}</td>${fC(avgDiff,avgCls)}
-        <td class="num">${avgp1}</td><td class="num">${avgp2}</td>${fC(avgpDiff,avgpCls)}
+        <td class="num">${avg1}</td><td class="num">${avg2}</td>
+        <td class="num ${avgCls}">${avgD>0?'+':''}${avgD}</td>
       </tr>
       <tr class="tf-tot">
         <td colspan="2">TOTAL EQUIPO</td>
-        <td class="num">${tot1}</td><td class="num">${tot2}</td>${fC(totDiff,totCls)}
-        <td class="num">${totp1}</td><td class="num">${totp2}</td>${fC(totpDiff,totpCls)}
+        <td class="num">${tot1}</td><td class="num">${tot2}</td>
+        <td class="num ${totCls}">${totD>0?'+':''}${totD}</td>
       </tr>
     </tfoot></table>
-    <div class="tabla-nota">Tiempos en minutos · 🚗 auto (OSRM) · 🚌 transporte público estimado · Δ = (Nueva − Actual)<br>Verde = mejora · Rojo = empeora</div>`;
+    <div class="tabla-nota">Tiempos en minutos · Δ = (Nueva − Actual) · Verde = mejora · Rojo = empeora</div>`;
 
     el.innerHTML=h;
   }
 
-  async function fetchOSRM(){
-    try{
-      const coords=[`${O1.lng},${O1.lat}`,`${O2.lng},${O2.lat}`,...P.map(p=>`${p.lng},${p.lat}`)].join(';');
-      const dest=P.map((_,i)=>i+2).join(',');
-      const url=`https://router.project-osrm.org/table/v1/driving/${coords}?sources=0,1&destinations=${dest}&annotations=duration`;
-      const r=await fetch(url);
-      const d=await r.json();
-      if(d.code==='Ok'){
-        P.forEach((p,i)=>{
-          p.c1=Math.round(d.durations[0][i]/60);
-          p.c2=Math.round(d.durations[1][i]/60);
-          p.diff=p.c2-p.c1;
-        });
-        updateMap();
-        renderPanel();
-        const now=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-        document.getElementById('ft').textContent=`🚗 Tiempos calculados con OSRM · actualizado ${now} · 🚌 transporte público estimado`;
-      }
-    }catch(e){
-      document.getElementById('ft').textContent='Tiempos estimados · 🚗 15 km/h hora pico · 🚌 12 km/h transporte público';
-    }
-  }
-
-  updateMap();
-  renderPanel();
-  fetchOSRM();
+  updateMap();renderPanel();
   const allPts=[...P.map(p=>[p.lat,p.lng]),[O1.lat,O1.lng],[O2.lat,O2.lng]];
   map.fitBounds(allPts,{padding:[30,30]});
   </script>
