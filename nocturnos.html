@@ -31,7 +31,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .leaflet-popup-content{margin:10px 12px!important;font-size:12px!important;line-height:1.5!important}
 .pn{font-weight:700;font-size:13px;margin-bottom:2px}
 .pz{color:var(--muted);font-size:11px;margin-bottom:8px}
-.pm{display:grid;grid-template-columns:auto 1fr;gap:6px;font-size:11px;align-items:center}
+.pm{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;font-size:11px;align-items:center}
+.pm-h{font-weight:600;font-size:10px;color:var(--muted);text-transform:uppercase}
 .pm .v{font-family:'JetBrains Mono',monospace;font-weight:600}
 
 .panel{border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--bg);z-index:500}
@@ -52,26 +53,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .card:hover,.card.on{border-color:var(--accent);box-shadow:0 2px 8px rgba(37,99,235,.1)}
 .card .n{font-weight:600;font-size:12px}
 .card .z{font-size:10px;color:var(--muted);margin-bottom:6px}
+.turno-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;vertical-align:1px;margin-left:4px}
+.turno-N{background:#ede9fe;color:#6d28d9}
+.turno-T{background:#fef3c7;color:#b45309}
 
-.comp-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center}
+.comp-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:center}
 .comp-box{padding:5px;border-radius:5px;background:var(--surface2);text-align:center}
 .comp-box.ofi1{background:var(--glow)}
 .comp-box .lbl{font-size:8px;color:var(--muted);font-weight:600}
 .comp-box .val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
+.warn{font-size:9px}
 
 .ft{padding:8px 12px;border-top:1px solid var(--border);font-size:9px;color:var(--muted);text-align:center;line-height:1.4;flex-shrink:0}
 
 .resumen-tabla{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11px}
-.resumen-tabla thead th{background:var(--surface2);padding:8px 6px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+.resumen-tabla thead th{background:var(--surface2);padding:8px 5px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.5px;border-bottom:2px solid var(--border)}
 .resumen-tabla th.num,.resumen-tabla td.num{text-align:right;font-family:'JetBrains Mono',monospace}
 .resumen-tabla tbody tr{border-bottom:1px solid var(--border);transition:.15s}
 .resumen-tabla tbody tr:hover{background:var(--surface2)}
 .resumen-tabla tbody tr:last-child{border-bottom:none}
-.resumen-tabla td{padding:7px 6px;color:var(--text)}
+.resumen-tabla td{padding:7px 5px;color:var(--text)}
 .resumen-tabla td:nth-child(2){color:var(--muted);font-size:10px}
-.resumen-tabla tfoot td{padding:9px 6px;font-weight:700;font-size:11px}
+.resumen-tabla tfoot td{padding:9px 5px;font-weight:700;font-size:11px}
 .resumen-tabla tfoot tr.tf-prom{background:var(--surface2);border-top:2px solid var(--border)}
-.resumen-tabla tfoot tr.tf-tot{background:var(--glow);border-top:1px solid var(--border)}
 .tabla-nota{font-size:10px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5;padding:0 4px}
 </style>
 </head>
@@ -102,30 +106,34 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
       <div class="tab" data-t="resumen" onclick="switchTab('resumen')">Resumen</div>
     </div>
     <div class="pc" id="pc"></div>
-    <div class="ft">Tiempos estimados · 🚗 15 km/h hora pico · 🚌 12 km/h transporte público</div>
+    <div class="ft" id="ft"></div>
   </div>
 </div>
 
 <script>
 const LAB={lat:19.2970,lng:-99.1370,name:'Laboratorio LANS',sub:'Av. Acueducto 402-13B, Huipulco, Tlalpan',color:'#2563eb'};
 
+// turno N = 22:00-06:00 (ida ~21:30 tráfico ligero, regreso 06:00)
+// turno T = 16:00-24:00 (ida ~15:30 pico moderado, regreso 24:00 sin metro)
+// Velocidades: N → 🚗 28 km/h ida y regreso · 🚌 10 km/h (frecuencias bajas)
+//              T → 🚗 18 ida / 30 regreso · 🚌 12 ida / 8 regreso (nochebús)
 const P=[
-{id:24,zona:"Col. Selene",alc:"Tláhuac",area:"Alto volúmen",hor:"L-V 22:00-06:00",lat:19.285,lng:-99.045,d:13.6,c:54,p:68},
-{id:704,zona:"Santa Úrsula Coapa",alc:"Coyoacán",area:"RM Integradores",hor:"L-S 16:00-24:00",lat:19.307,lng:-99.148,d:2.2,c:9,p:11},
-{id:844,zona:"Santa Cruz Acalpixca",alc:"Xochimilco",area:"RM Referencia",hor:"L-V 22:00-06:00",lat:19.2565,lng:-99.077,d:10.8,c:43,p:54},
-{id:917,zona:"Jardines de San Lorenzo",alc:"Iztapalapa",area:"Alto volúmen",hor:"M-S 22:00-06:00",lat:19.334,lng:-99.040,d:15.4,c:62,p:77},
-{id:922,zona:"Col. Loma Bonita",alc:"Tlalpan",area:"Subrogados",hor:"L-V 22:00-06:00",lat:19.283,lng:-99.210,d:10.9,c:44,p:54},
-{id:929,zona:"San Andrés Tomatlán",alc:"Iztapalapa",area:"Alto volúmen",hor:"L-V 22:00-06:00",lat:19.331,lng:-99.097,d:7.9,c:32,p:40},
-{id:941,zona:"Pedregal de Sta. Úrsula Coapa",alc:"Coyoacán",area:"RM Integradores",hor:"L-S 16:00-24:00",lat:19.314,lng:-99.152,d:3.4,c:14,p:17},
-{id:946,zona:"Col. Aviación Civil",alc:"Venustiano Carranza",area:"RM Integradores",hor:"M-S 22:00-06:00",lat:19.427,lng:-99.083,d:21.7,c:87,p:108},
-{id:981,zona:"Col. Alfredo V. Bonfil",alc:"Naucalpan (Edo.Méx)",area:"Hematología diagnóstica",hor:"M-S 22:00-06:00",lat:19.465,lng:-99.245,d:30.6,c:122,p:153},
-{id:998,zona:"San Miguel Topilejo",alc:"Tlalpan",area:"RM Integradores",hor:"M-S 22:00-06:00",lat:19.202,lng:-99.141,d:14.8,c:59,p:74},
-{id:1000,zona:"Pedregal de Santo Domingo",alc:"Coyoacán",area:"RM Integradores",hor:"L-S 16:00-24:00",lat:19.327,lng:-99.166,d:6.3,c:25,p:32},
-{id:1007,zona:"Culhuacán CTM Secc. IX",alc:"Coyoacán",area:"RM Integradores",hor:"M-S 22:00-06:00",lat:19.322,lng:-99.107,d:5.9,c:24,p:30},
-{id:1008,zona:"Alianza Popular Revolucionaria",alc:"Coyoacán",area:"Hematología diagnóstica",hor:"M-S 22:00-06:00",lat:19.311,lng:-99.114,d:4.0,c:16,p:20},
-{id:1029,zona:"Residencial Acoxpa",alc:"Tlalpan",area:"RM Integradores",hor:"L-S 16:00-24:00",lat:19.300,lng:-99.135,d:0.6,c:2,p:3},
-{id:1031,zona:"Lomas Hidalgo",alc:"Tlalpan",area:"RM Integradores",hor:"L-V 22:00-06:00",lat:19.284,lng:-99.176,d:6.1,c:24,p:30},
-{id:1042,zona:"Col. Evolución",alc:"Nezahualcóyotl (Edo.Méx)",area:"RM Integradores",hor:"M-S 22:00-06:00",lat:19.410,lng:-99.030,d:23.6,c:94,p:118},
+{id:24,zona:"Col. Selene",alc:"Tláhuac",area:"Alto volúmen",hor:"L-V 22:00-06:00",turno:"N",lat:19.285,lng:-99.045,d:13.6,ci:29,cr:29,pi:82,pr:82},
+{id:704,zona:"Santa Úrsula Coapa",alc:"Coyoacán",area:"RM Integradores",hor:"L-S 16:00-24:00",turno:"T",lat:19.307,lng:-99.148,d:2.2,ci:7,cr:4,pi:11,pr:16},
+{id:844,zona:"Santa Cruz Acalpixca",alc:"Xochimilco",area:"RM Referencia",hor:"L-V 22:00-06:00",turno:"N",lat:19.2565,lng:-99.077,d:10.8,ci:23,cr:23,pi:65,pr:65},
+{id:917,zona:"Jardines de San Lorenzo",alc:"Iztapalapa",area:"Alto volúmen",hor:"M-S 22:00-06:00",turno:"N",lat:19.334,lng:-99.040,d:15.4,ci:33,cr:33,pi:92,pr:92},
+{id:922,zona:"Col. Loma Bonita",alc:"Tlalpan",area:"Subrogados",hor:"L-V 22:00-06:00",turno:"N",lat:19.283,lng:-99.210,d:10.9,ci:23,cr:23,pi:65,pr:65},
+{id:929,zona:"San Andrés Tomatlán",alc:"Iztapalapa",area:"Alto volúmen",hor:"L-V 22:00-06:00",turno:"N",lat:19.331,lng:-99.097,d:7.9,ci:17,cr:17,pi:47,pr:47},
+{id:941,zona:"Pedregal de Sta. Úrsula Coapa",alc:"Coyoacán",area:"RM Integradores",hor:"L-S 16:00-24:00",turno:"T",lat:19.314,lng:-99.152,d:3.4,ci:11,cr:7,pi:17,pr:26},
+{id:946,zona:"Col. Aviación Civil",alc:"Venustiano Carranza",area:"RM Integradores",hor:"M-S 22:00-06:00",turno:"N",lat:19.427,lng:-99.083,d:21.7,ci:46,cr:46,pi:130,pr:130},
+{id:981,zona:"Col. Alfredo V. Bonfil",alc:"Naucalpan (Edo.Méx)",area:"Hematología diagnóstica",hor:"M-S 22:00-06:00",turno:"N",lat:19.465,lng:-99.245,d:30.6,ci:66,cr:66,pi:184,pr:184},
+{id:998,zona:"San Miguel Topilejo",alc:"Tlalpan",area:"RM Integradores",hor:"M-S 22:00-06:00",turno:"N",lat:19.202,lng:-99.141,d:14.8,ci:32,cr:32,pi:89,pr:89},
+{id:1000,zona:"Pedregal de Santo Domingo",alc:"Coyoacán",area:"RM Integradores",hor:"L-S 16:00-24:00",turno:"T",lat:19.327,lng:-99.166,d:6.3,ci:21,cr:13,pi:32,pr:47},
+{id:1007,zona:"Culhuacán CTM Secc. IX",alc:"Coyoacán",area:"RM Integradores",hor:"M-S 22:00-06:00",turno:"N",lat:19.322,lng:-99.107,d:5.9,ci:13,cr:13,pi:35,pr:35},
+{id:1008,zona:"Alianza Popular Revolucionaria",alc:"Coyoacán",area:"Hematología diagnóstica",hor:"M-S 22:00-06:00",turno:"N",lat:19.311,lng:-99.114,d:4.0,ci:9,cr:9,pi:24,pr:24},
+{id:1029,zona:"Residencial Acoxpa",alc:"Tlalpan",area:"RM Integradores",hor:"L-S 16:00-24:00",turno:"T",lat:19.300,lng:-99.135,d:0.6,ci:2,cr:1,pi:3,pr:4},
+{id:1031,zona:"Lomas Hidalgo",alc:"Tlalpan",area:"RM Integradores",hor:"L-V 22:00-06:00",turno:"N",lat:19.284,lng:-99.176,d:6.1,ci:13,cr:13,pi:37,pr:37},
+{id:1042,zona:"Col. Evolución",alc:"Nezahualcóyotl (Edo.Méx)",area:"RM Integradores",hor:"M-S 22:00-06:00",turno:"N",lat:19.410,lng:-99.030,d:23.6,ci:51,cr:51,pi:142,pr:142},
 ];
 
 let tMode='auto', curTab='personas', selPerson=null;
@@ -154,22 +162,28 @@ P.forEach((p,i)=>{
   lines.push(l);
 });
 
-function tt(p){return tMode==='auto'?p.c:p.p}
+function tIda(p){return tMode==='auto'?p.ci:p.pi}
+function tReg(p){return tMode==='auto'?p.cr:p.pr}
+function tPeor(p){return Math.max(tIda(p),tReg(p))}
 function tIcon(){return tMode==='auto'?'🚗':'🚌'}
+function regWarn(p){return tMode==='transit'&&p.turno==='T'?' ⚠':''}
+function turnoBadge(p){return p.turno==='N'?'<span class="turno-badge turno-N">22-06</span>':'<span class="turno-badge turno-T">16-24</span>'}
 
 function updateMap(){
   P.forEach((p,i)=>{
     const on=selPerson===i;
-    markers[i].setIcon(mkIcon(tc(tt(p)),on?28:22,p.id.toString().slice(-2)));
+    markers[i].setIcon(mkIcon(tc(tPeor(p)),on?28:22,p.id.toString().slice(-2)));
     markers[i].unbindPopup();
     markers[i].bindPopup(`
       <div class="pn">Emp. ${p.id}</div>
       <div class="pz">${p.zona} · ${p.alc}<br>${p.area} · ${p.hor}</div>
       <div class="pm">
-        <div>🚗</div><div class="v">${p.c} min</div>
-        <div>🚌</div><div class="v">${p.p} min</div>
-        <div>📏</div><div class="v">${p.d} km</div>
-      </div>`);
+        <div></div><div class="pm-h">Ida</div><div class="pm-h">Regreso</div>
+        <div>🚗</div><div class="v">${p.ci}m</div><div class="v">${p.cr}m</div>
+        <div>🚌</div><div class="v">${p.pi}m</div><div class="v">${p.pr}m${p.turno==='T'?' ⚠':''}</div>
+        <div>📏</div><div class="v" style="grid-column:span 2">${p.d} km</div>
+      </div>
+      ${p.turno==='T'?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid #eee;font-size:10px;color:#b45309">⚠ Sale a las 24:00: ya no hay metro, solo nochebús o taxi</div>':''}`);
     lines[i].setStyle({opacity:on?.8:.2,weight:on?3:1.3,dashArray:on?null:'5 4'});
   });
 }
@@ -178,7 +192,13 @@ function setTransport(t){
   tMode=t;
   document.getElementById('tAuto').className='t-btn'+(t==='auto'?' on':'');
   document.getElementById('tTransit').className='t-btn'+(t==='transit'?' on':'');
-  updateMap();renderPanel();
+  renderFt();updateMap();renderPanel();
+}
+
+function renderFt(){
+  document.getElementById('ft').innerHTML=tMode==='auto'
+    ?'🚗 Turno 22-06: 28 km/h (tráfico nocturno ligero, ida y regreso) · Turno 16-24: 18 km/h entrada (pre-pico) / 30 km/h regreso a medianoche'
+    :'🚌 Turno 22-06: 10 km/h (metro/RTP con frecuencias bajas de noche y 06:00) · Turno 16-24: 12 km/h entrada · ⚠ regreso 24:00 sin metro, estimado en nochebús (8 km/h)';
 }
 
 function selectPerson(i){
@@ -202,15 +222,16 @@ function renderPanel(){
 
 function renderPersonas(el){
   const sorted=[...P].map(p=>({...p,idx:P.indexOf(p)}));
-  sorted.sort((a,b)=>tt(a)-tt(b));
-  let h=`<div style="font-size:10px;color:var(--muted);margin-bottom:8px">${P.length} empleados · ordenados por tiempo al laboratorio</div>`;
+  sorted.sort((a,b)=>tPeor(a)-tPeor(b));
+  let h=`<div style="font-size:10px;color:var(--muted);margin-bottom:8px">${P.length} empleados · ordenados por su peor trayecto (ida o regreso)</div>`;
   sorted.forEach(p=>{
     h+=`<div class="card ${selPerson===p.idx?'on':''}" onclick="selectPerson(${p.idx})" id="c${p.idx}">
-      <div class="n">Emp. ${p.id} — ${p.zona}</div>
-      <div class="z">${p.alc} · ${p.area} · ${p.hor}</div>
+      <div class="n">Emp. ${p.id} — ${p.zona}${turnoBadge(p)}</div>
+      <div class="z">${p.alc} · ${p.area} · ${p.d} km</div>
       <div class="comp-row">
-        <div class="comp-box ofi1"><div class="lbl">TIEMPO ${tIcon()}</div><div class="val" style="color:${tc(tt(p))}">${tt(p)}m</div></div>
-        <div class="comp-box"><div class="lbl">DISTANCIA</div><div class="val">${p.d}km</div></div>
+        <div class="comp-box ofi1"><div class="lbl">IDA ${tIcon()}</div><div class="val" style="color:${tc(tIda(p))}">${tIda(p)}m</div></div>
+        <div class="comp-box"><div class="lbl">REGRESO ${tIcon()}</div><div class="val" style="color:${tc(tReg(p))}">${tReg(p)}m<span class="warn">${regWarn(p)}</span></div></div>
+        <div class="comp-box"><div class="lbl">TOTAL DÍA</div><div class="val">${tIda(p)+tReg(p)}m</div></div>
       </div>
     </div>`;
   });
@@ -218,18 +239,22 @@ function renderPersonas(el){
 }
 
 function renderResumen(el){
-  const sorted=[...P].sort((a,b)=>a.c-b.c);
-  const totC=P.reduce((s,p)=>s+p.c,0),avgC=Math.round(totC/P.length);
-  const totP=P.reduce((s,p)=>s+p.p,0),avgP=Math.round(totP/P.length);
+  const sorted=[...P].sort((a,b)=>(a.ci+a.cr)-(b.ci+b.cr));
+  const sum=k=>P.reduce((s,p)=>s+p[k],0);
+  const avg=k=>Math.round(sum(k)/P.length);
 
   let h=`<table class="resumen-tabla">
     <thead>
       <tr>
-        <th>Emp.</th>
-        <th>Zona</th>
-        <th class="num">📏 km</th>
-        <th class="num">🚗 min</th>
-        <th class="num">🚌 min</th>
+        <th rowspan="2">Emp.</th>
+        <th rowspan="2">Zona</th>
+        <th rowspan="2" class="num">km</th>
+        <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border)">🚗 Auto</th>
+        <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border)">🚌 Transporte</th>
+      </tr>
+      <tr>
+        <th class="num">Ida</th><th class="num">Reg.</th>
+        <th class="num">Ida</th><th class="num">Reg.</th>
       </tr>
     </thead><tbody>`;
 
@@ -237,29 +262,26 @@ function renderResumen(el){
     h+=`<tr>
       <td>${p.id}</td><td>${p.zona}</td>
       <td class="num">${p.d}</td>
-      <td class="num" style="color:${tc(p.c)};font-weight:700">${p.c}</td>
-      <td class="num" style="color:${tc(p.p)};font-weight:700">${p.p}</td>
+      <td class="num" style="color:${tc(p.ci)};font-weight:700">${p.ci}</td>
+      <td class="num" style="color:${tc(p.cr)};font-weight:700">${p.cr}</td>
+      <td class="num" style="color:${tc(p.pi)};font-weight:700">${p.pi}</td>
+      <td class="num" style="color:${tc(p.pr)};font-weight:700">${p.pr}${p.turno==='T'?'⚠':''}</td>
     </tr>`;
   });
 
   h+=`</tbody><tfoot>
     <tr class="tf-prom">
       <td colspan="3">PROMEDIO</td>
-      <td class="num">${avgC}</td>
-      <td class="num">${avgP}</td>
-    </tr>
-    <tr class="tf-tot">
-      <td colspan="3">TOTAL EQUIPO</td>
-      <td class="num">${totC}</td>
-      <td class="num">${totP}</td>
+      <td class="num">${avg('ci')}</td><td class="num">${avg('cr')}</td>
+      <td class="num">${avg('pi')}</td><td class="num">${avg('pr')}</td>
     </tr>
   </tfoot></table>
-  <div class="tabla-nota">Tiempos en minutos hacia el laboratorio (Los Alpes) · Color = rango de tiempo</div>`;
+  <div class="tabla-nota">Tiempos en minutos según el horario de cada turno · ⚠ = sale a las 24:00, sin metro: estimado en nochebús, en la práctica suele requerir taxi/app · Distancias por ruta estimada desde el centro de cada colonia</div>`;
 
   el.innerHTML=h;
 }
 
-updateMap();renderPanel();
+renderFt();updateMap();renderPanel();
 const allPts=[...P.map(p=>[p.lat,p.lng]),[LAB.lat,LAB.lng]];
 map.fitBounds(allPts,{padding:[30,30]});
 </script>
